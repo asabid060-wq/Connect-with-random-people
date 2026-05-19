@@ -9,9 +9,10 @@ const io = new Server(server);
 
 app.use(express.static(__dirname));
 
+// আপনার সম্পূর্ণ লাইভকিট ক্রেডেনশিয়ালস একদম রেডি করে দেওয়া হলো
 const LIVEKIT_URL = "wss://gtman-vjnbbcnr.livekit.cloud";
 const LIVEKIT_API_KEY = "APIR7Zd58gejbt2";
-const LIVEKIT_SECRET_KEY = "আপনার_Secret_Key_এখানে_বসাবেন";
+const LIVEKIT_SECRET_KEY = "uO/8pXhKUn6GfWhU";
 
 let waitingUser = null;
 

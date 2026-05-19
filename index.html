@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Random Voice Chat</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- সার্ভারের সাথে সংযোগ করার জন্য socket.io লাইব্রেরি -->
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Welcome to Random Voice Chat</h1>
+        <p>Talk to strangers anonymously worldwide</p>
+        
+        <div class="status-box">
+            <span id="status">Ready to connect...</span>
+        </div>
+
+        <button id="start-btn">Start Random Call</button>
+    </div>
+
+    <script>
+        // সার্ভারের সাথে কানেক্ট করা
+        const socket = io();
+        const startBtn = document.getElementById('start-btn');
+        const statusText = document.getElementById('status');
+
+        let localStream;
+        let peerConnection;
+        
+        // WebRTC এর জন্য ফ্রি গুগল সার্ভার কনফিগারেশন
+        const config = {
+            iceServers: [{ urls: 'stun:://google.com' }]
+        };
+
+        // বাটনে ক্লিক করলে পার্টনার খোঁজা শুরু হবে
+        startBtn.addEventListener('click', async () => {
+            statusText.innerText = "Accessing microphone...";
+            startBtn.disabled = true;
+
+            try {
+                // ইউজারের মাইক্রোফোন পারমিশন নেওয়া
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                statusText.innerText = "Searching for a partner...";
+                socket.emit('find_partner');
+            } catch (err) {
+                statusText.innerText = "Microphone access denied!";
+                startBtn.disabled = false;
+                console.error(err);
+            }
+        });
+
+        // পার্টনার খুঁজে পেলে এই কোডটি কাজ করবে
+        socket.socket.on('match_found', async (data) => {
+            statusText.innerText = "Connected with a stranger!";
+            startBtn.innerText = "In Call";
+            
+            // এখানে WebRTC ভয়েস কল কানেকশন তৈরি হচ্ছে
+            peerConnection = new RTCPeerConnection(config);
+            
+            // নিজের ভয়েস পার্টনারের কাছে পাঠানো
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            // পার্টনারের ভয়েস রিসিভ করা
+            peerConnection.ontrack = (event) => {
+                const remoteAudio = document.createElement('audio');
+                remoteAudio.srcObject = event.streams[0];
+                remoteAudio.autoplay = true;
+                document.body.appendChild(remoteAudio);
+            };
+
+            // নেটওয়ার্ক কানেকশন হ্যান্ডেল করা
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    // এখানে ক্যান্ডিডেট আদান প্রদান হবে (পরবর্তী আপডেটে সম্পূর্ণ হবে)
+                }
+            };
+        });
+
+        socket.on('waiting', (msg) => {
+            statusText.innerText = msg;
+        });
+    </script>
+</body>
+</html>

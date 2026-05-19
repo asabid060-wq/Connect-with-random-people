@@ -52,7 +52,7 @@
         });
 
         socket.on('match_found', async (data) => {
-            statusText.innerText = "Connected with a stranger!";
+            statusText.innerText = "Connected! Click anywhere to hear voice.";
             startBtn.innerText = "In Call";
             partnerSocketId = data.partnerId;
             
@@ -69,6 +69,7 @@
                 }
                 remoteAudio.srcObject = event.streams[0];
                 remoteAudio.autoplay = true;
+                remoteAudio.controls = false;
             };
 
             peerConnection.onicecandidate = (event) => {
@@ -85,6 +86,7 @@
         });
 
         socket.on('offer', async (data) => {
+            if(!peerConnection) return;
             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
@@ -92,10 +94,12 @@
         });
 
         socket.on('answer', async (data) => {
+            if(!peerConnection) return;
             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
         });
 
         socket.on('ice_candidate', async (data) => {
+            if(!peerConnection) return;
             try {
                 await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
             } catch (e) {

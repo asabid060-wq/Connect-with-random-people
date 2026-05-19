@@ -16,13 +16,21 @@
             <span id="status">Ready to connect...</span>
         </div>
 
+        <!-- দৃশ্যমান অডিও প্লেয়ার যা ব্রাউজারকে সাউন্ড প্লে করতে বাধ্য করবে -->
+        <div id="audio-container" style="margin: 15px 0;">
+            <audio id="remote-audio" autoplay controls style="display: none; width: 100%;"></audio>
+        </div>
+
         <button id="start-btn">Start Random Call</button>
+        <button id="disconnect-btn" style="background-color: #dc3545; display: none; margin-top: 10px;">Disconnect</button>
     </div>
 
     <script>
         const socket = io();
         const startBtn = document.getElementById('start-btn');
+        const disconnectBtn = document.getElementById('disconnect-btn');
         const statusText = document.getElementById('status');
+        const remoteAudio = document.getElementById('remote-audio');
 
         let localStream;
         let peerConnection;
@@ -47,13 +55,18 @@
             }
         });
 
+        disconnectBtn.addEventListener('click', () => {
+            location.reload(); // কল কাটলে পেজ রিফ্রেশ হয়ে নতুন কলের জন্য রেডি হবে
+        });
+
         socket.on('waiting', (msg) => {
             statusText.innerText = msg;
         });
 
         socket.on('match_found', async (data) => {
-            statusText.innerText = "Connected! Click anywhere to hear voice.";
-            startBtn.innerText = "In Call";
+            statusText.innerText = "Connected! Talk now.";
+            startBtn.style.display = "none";
+            disconnectBtn.style.display = "block";
             partnerSocketId = data.partnerId;
             
             peerConnection = new RTCPeerConnection(config);
@@ -61,15 +74,18 @@
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
             peerConnection.ontrack = (event) => {
-                let remoteAudio = document.getElementById('remote-audio');
-                if (!remoteAudio) {
-                    remoteAudio = document.createElement('audio');
-                    remoteAudio.id = 'remote-audio';
-                    document.body.appendChild(remoteAudio);
-                }
+                // সরাসরি আমাদের দৃশ্যমান স্পিকার বক্সে পার্টনারের ভয়েস যুক্ত করা হচ্ছে
                 remoteAudio.srcObject = event.streams[0];
-                remoteAudio.autoplay = true;
-                remoteAudio.controls = false;
+                remoteAudio.style.display = "block"; // স্পিকারটি স্ক্রিনে দেখাবে
+                
+                // ব্রাউজার ব্লক করলে জোরপূর্বক প্লে করার চেষ্টা
+                remoteAudio.play().catch(e => {
+                    statusText.innerText = "Click anywhere on screen to unmute voice!";
+                    document.body.addEventListener('click', () => {
+                        remoteAudio.play();
+                        statusText.innerText = "Connected! Talk now.";
+                    }, { once: true });
+                });
             };
 
             peerConnection.onicecandidate = (event) => {

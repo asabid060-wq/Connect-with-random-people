@@ -1,19 +1,13 @@
 {
-  "name": "software-coding",
+  "name": "connect-with-random-people",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Random Voice Chat Site",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "express": "^4.19.2",
-    "livekit-server-sdk": "^2.4.0",
     "socket.io": "^4.7.5"
   }
-
 }

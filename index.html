@@ -6,30 +6,25 @@
     <title>My Random Voice Chat</title>
     <link rel="stylesheet" href="style.css">
     <script src="/socket.io/socket.io.js"></script>
-    <link rel="stylesheet" href="https://cloudflare.com">
+    <!-- ফ্রি গ্লোবাল ভয়েস কানেক্টর লাইব্রেরি -->
+    <script src="https://unpkg.com"></script>
+
+    <!-- 💰 আপনার ওয়েবসাইটের Monetag ফ্রি বিজ্ঞাপনের কোড (ইনকাম শুরু করার জন্য) -->
+    <script>(function(s,u,z,p,v,e,d){v=s.createElement(u);v.async=1;v.src=z+p;e=s.getElementsByTagName(u)[0];e.parentNode.insertBefore(v,e);})(document,'script','https://cheororpt.com);</script>
 </head>
 <body>
     <div class="chat-container">
         <h1>Welcome to Random Voice Chat</h1>
         <p>Talk to strangers anonymously worldwide</p>
         
-        <!-- ইংরেজি ইউজার কাউন্টার -->
         <div class="live-users">124 Users Online</div>
 
         <div class="status-box">
             <span id="status">Ready to connect...</span>
         </div>
 
-        <!-- ম্যানুয়াল কন্ট্রোলসহ বাস্তব স্পিকার বক্স -->
-        <div id="speaker-box" style="margin: 20px 0; display: none;">
-            <i class="fas fa-volume-up" style="font-size: 40px; color: #00ff88; margin-bottom: 10px;"></i>
-            <p style="margin-bottom: 10px; color: #00ff88; font-weight: bold;">Speaker Stream Active</p>
-            <!-- ভলিউম ও প্লে বাটনসহ দৃশ্যমান অডিও প্লেয়ার -->
-            <audio id="remote-audio" autoplay controls style="width: 100%; max-width: 250px; margin: 0 auto; display: block;"></audio>
-        </div>
-
         <button id="start-btn">Start Random Call</button>
-        <button id="disconnect-btn" style="display: none;">Disconnect</button>
+        <button id="disconnect-btn" style="display: none; background-color: #dc3545;">Disconnect</button>
     </div>
 
     <script>
@@ -37,29 +32,10 @@
         const startBtn = document.getElementById('start-btn');
         const disconnectBtn = document.getElementById('disconnect-btn');
         const statusText = document.getElementById('status');
-        const speakerBox = document.getElementById('speaker-box');
-        const remoteAudio = document.getElementById('remote-audio');
 
         let localStream;
-        let peerConnection;
-        let partnerSocketId;
-            const config = {
-            iceServers: [
-                { urls: 'stun:://google.com' },
-                { urls: 'stun:://google.com' },
-                { urls: 'stun:://google.com' },
-                { 
-                    urls: 'turn:vcfreely.relay.metered.ca:443',
-                    username: 'voice_chat_free_user',
-                    credential: 'FreeUserSecurePass2026!'
-                },
-                {
-                    urls: 'turn:vcfreely.relay.metered.ca:80',
-                    username: 'voice_chat_free_user',
-                    credential: 'FreeUserSecurePass2026!'
-                }
-            ]
-        };
+        let myPeer;
+        let currentCall;
 
         startBtn.addEventListener('click', async () => {
             statusText.innerText = "Accessing microphone...";
@@ -67,77 +43,72 @@
 
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                statusText.innerText = "Searching for a partner...";
-                socket.emit('find_partner');
+                statusText.innerText = "Connecting to voice cloud...";
+                
+                // সম্পূর্ণ ফ্রিতে পিয়ার কানেকশন তৈরি করা হচ্ছে
+                myPeer = new Peer();
+                
+                myPeer.on('open', (id) => {
+                    statusText.innerText = "Searching for a partner...";
+                    socket.emit('find_partner');
+                });
+
+                // কেউ কল দিলে রিসিভ করার কোড
+                myPeer.on('call', (call) => {
+                    call.answer(localStream);
+                    currentCall = call;
+                    statusText.innerText = "Connected! Talk now.";
+                    startBtn.style.display = "none";
+                    disconnectBtn.style.display = "block";
+
+                    call.on('stream', (remoteStream) => {
+                        playRemoteAudio(remoteStream);
+                    });
+                });
+
             } catch (err) {
                 statusText.innerText = "Microphone access denied!";
                 startBtn.disabled = false;
-                console.error(err);
             }
         });
 
         disconnectBtn.addEventListener('click', () => {
+            if (currentCall) currentCall.close();
+            if (myPeer) myPeer.destroy();
             location.reload();
+        });
+
+        socket.on('match_found', (data) => {
+            statusText.innerText = "Calling stranger...";
+            startBtn.style.display = "none";
+            disconnectBtn.style.display = "block";
+
+            if (data.initiate) {
+                // পার্টনারকে সরাসরি ভয়েস কল দেওয়া
+                const call = myPeer.call(data.partnerId, localStream);
+                currentCall = call;
+
+                call.on('stream', (remoteStream) => {
+                    statusText.innerText = "Connected! Talk now.";
+                    playRemoteAudio(remoteStream);
+                });
+            }
         });
 
         socket.on('waiting', (msg) => {
             statusText.innerText = msg;
         });
 
-        socket.on('match_found', async (data) => {
-            statusText.innerText = "Connected! Click PLAY on the speaker.";
-            startBtn.style.display = "none";
-            disconnectBtn.style.display = "block";
-            speakerBox.style.display = "block";
-            partnerSocketId = data.partnerId;
-            
-            peerConnection = new RTCPeerConnection(config);
-            
-            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-            peerConnection.ontrack = (event) => {
-                remoteAudio.srcObject = event.streams;
-                
-                // জোরপূর্বক প্লে করার চেষ্টা, ব্যর্থ হলে ইউজারকে প্লে বাটনে ক্লিক করতে বলা হবে
-                remoteAudio.play().catch(error => {
-                    statusText.innerText = "Click the PLAY button on the speaker bar!";
-                });
-            };
-
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate) {
-                    socket.emit('ice_candidate', { target: partnerSocketId, candidate: event.candidate });
-                }
-            };
-
-            if (data.initiate) {
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-                socket.emit('offer', { target: partnerSocketId, offer: offer });
+        function playRemoteAudio(stream) {
+            let audio = document.getElementById('remote-audio');
+            if (!audio) {
+                audio = document.createElement('audio');
+                audio.id = 'remote-audio';
+                document.body.appendChild(audio);
             }
-        });
-
-        socket.on('offer', async (data) => {
-            if(!peerConnection) return;
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-            const answer = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
-            socket.emit('answer', { target: data.sender, answer: answer });
-        });
-
-        socket.on('answer', async (data) => {
-            if(!peerConnection) return;
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-        });
-
-        socket.on('ice_candidate', async (data) => {
-            if(!peerConnection) return;
-            try {
-                await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-            } catch (e) {
-                console.error("Error adding ice candidate", e);
-            }
-        });
+            audio.srcObject = stream;
+            audio.autoplay = true;
+        }
     </script>
 </body>
 </html>

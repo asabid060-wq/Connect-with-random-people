@@ -13,16 +13,19 @@
         <h1>Welcome to Random Voice Chat</h1>
         <p>Talk to strangers anonymously worldwide</p>
         
-        <div class="live-users">১২৪ জন অনলাইনে আছে</div>
+        <!-- ইংরেজি ইউজার কাউন্টার -->
+        <div class="live-users">124 Users Online</div>
 
         <div class="status-box">
             <span id="status">Ready to connect...</span>
         </div>
 
+        <!-- ম্যানুয়াল কন্ট্রোলসহ বাস্তব স্পিকার বক্স -->
         <div id="speaker-box" style="margin: 20px 0; display: none;">
             <i class="fas fa-volume-up" style="font-size: 40px; color: #00ff88; margin-bottom: 10px;"></i>
-            <p style="margin-bottom: 10px; color: #00ff88;">Voice Speaker Active</p>
-            <audio id="remote-audio" autoplay controls style="width: 100%; max-width: 250px; margin: 0 auto;"></audio>
+            <p style="margin-bottom: 10px; color: #00ff88; font-weight: bold;">Speaker Stream Active</p>
+            <!-- ভলিউম ও প্লে বাটনসহ দৃশ্যমান অডিও প্লেয়ার -->
+            <audio id="remote-audio" autoplay controls style="width: 100%; max-width: 250px; margin: 0 auto; display: block;"></audio>
         </div>
 
         <button id="start-btn">Start Random Call</button>
@@ -82,7 +85,7 @@
         });
 
         socket.on('match_found', async (data) => {
-            statusText.innerText = "Connected! Start talking.";
+            statusText.innerText = "Connected! Click PLAY on the speaker.";
             startBtn.style.display = "none";
             disconnectBtn.style.display = "block";
             speakerBox.style.display = "block";
@@ -94,12 +97,11 @@
 
             peerConnection.ontrack = (event) => {
                 remoteAudio.srcObject = event.streams;
-                const playPromise = remoteAudio.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        statusText.innerText = "Click the Play button on the speaker!";
-                    });
-                }
+                
+                // জোরপূর্বক প্লে করার চেষ্টা, ব্যর্থ হলে ইউজারকে প্লে বাটনে ক্লিক করতে বলা হবে
+                remoteAudio.play().catch(error => {
+                    statusText.innerText = "Click the PLAY button on the speaker bar!";
+                });
             };
 
             peerConnection.onicecandidate = (event) => {

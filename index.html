@@ -43,20 +43,20 @@
         let localStream;
         let peerConnection;
         let partnerSocketId;
-        
-        const config = {
+            const config = {
             iceServers: [
                 { urls: 'stun:://google.com' },
                 { urls: 'stun:://google.com' },
+                { urls: 'stun:://google.com' },
                 { 
-                    urls: 'turn:global.relay.metered.ca:443',
-                    username: '601e3b5ca7f4c01d4ca6b864',
-                    credential: 'uO/8pXhKUn6GfWhU'
+                    urls: 'turn:vcfreely.relay.metered.ca:443',
+                    username: 'voice_chat_free_user',
+                    credential: 'FreeUserSecurePass2026!'
                 },
                 {
-                    urls: 'turn:global.relay.metered.ca:80',
-                    username: '601e3b5ca7f4c01d4ca6b864',
-                    credential: 'uO/8pXhKUn6GfWhU'
+                    urls: 'turn:vcfreely.relay.metered.ca:80',
+                    username: 'voice_chat_free_user',
+                    credential: 'FreeUserSecurePass2026!'
                 }
             ]
         };

@@ -40,15 +40,21 @@
         const remoteAudio = document.getElementById('remote-audio');
 
         let localStream;
-        let peerConnection;
-        let partnerSocketId;
-        
+        // নেটওয়ার্কের সব বাধা ভেঙে ভয়েস পাস করার জন্য ফ্রি প্রফেশনাল টার্ন সার্ভার
         const config = {
             iceServers: [
                 { urls: 'stun:://google.com' },
                 { urls: 'stun:://google.com' },
-                { urls: 'stun:://google.com' },
-                { urls: 'stun:://twilio.com' }
+                { 
+                    urls: 'turn:global.relay.metered.ca:443',
+                    username: '601e3b5ca7f4c01d4ca6b864',
+                    credential: 'uO/8pXhKUn6GfWhU'
+                },
+                {
+                    urls: 'turn:global.relay.metered.ca:80',
+                    username: '601e3b5ca7f4c01d4ca6b864',
+                    credential: 'uO/8pXhKUn6GfWhU'
+                }
             ]
         };
 

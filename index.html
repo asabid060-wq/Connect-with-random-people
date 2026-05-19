@@ -19,11 +19,9 @@
             <span id="status">Ready to connect...</span>
         </div>
 
-        <!-- AirTALK এর মতো দৃশ্যমান বাস্তব স্পিকার বক্স -->
         <div id="speaker-box" style="margin: 20px 0; display: none;">
             <i class="fas fa-volume-up" style="font-size: 40px; color: #00ff88; margin-bottom: 10px;"></i>
             <p style="margin-bottom: 10px; color: #00ff88;">Voice Speaker Active</p>
-            <!-- এই বাস্তব অডিও প্লেয়ারটি স্পিকার হিসেবে কাজ করবে -->
             <audio id="remote-audio" autoplay controls style="width: 100%; max-width: 250px; margin: 0 auto;"></audio>
         </div>
 
@@ -40,7 +38,9 @@
         const remoteAudio = document.getElementById('remote-audio');
 
         let localStream;
-        // নেটওয়ার্কের সব বাধা ভেঙে ভয়েস পাস করার জন্য ফ্রি প্রফেশনাল টার্ন সার্ভার
+        let peerConnection;
+        let partnerSocketId;
+        
         const config = {
             iceServers: [
                 { urls: 'stun:://google.com' },
@@ -85,7 +85,7 @@
             statusText.innerText = "Connected! Start talking.";
             startBtn.style.display = "none";
             disconnectBtn.style.display = "block";
-            speakerBox.style.display = "block"; // স্পিকারটি স্ক্রিনে দৃশ্যমান হবে
+            speakerBox.style.display = "block";
             partnerSocketId = data.partnerId;
             
             peerConnection = new RTCPeerConnection(config);
@@ -93,10 +93,7 @@
             localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
 
             peerConnection.ontrack = (event) => {
-                // পার্টনারের ভয়েস সরাসরি স্ক্রিনের দৃশ্যমান স্পিকারে দেওয়া হচ্ছে
-                remoteAudio.srcObject = event.streams[0];
-                
-                // ব্রাউজারের সিকিউরিটি বাইপাস করে প্লে করা
+                remoteAudio.srcObject = event.streams;
                 const playPromise = remoteAudio.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(error => {

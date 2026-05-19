@@ -52,7 +52,7 @@
         });
 
         // পার্টনার খুঁজে পেলে এই কোডটি কাজ করবে
-        socket.socket.on('match_found', async (data) => {
+        socket.on('match_found', async (data) => {
             statusText.innerText = "Connected with a stranger!";
             startBtn.innerText = "In Call";
             

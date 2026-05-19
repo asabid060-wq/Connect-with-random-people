@@ -36,9 +36,15 @@
         let peerConnection;
         let partnerSocketId;
         
-        const config = {
-            iceServers: [{ urls: 'stun:://google.com' }]
+             const config = {
+            iceServers: [
+                { urls: 'stun:://google.com' },
+                { urls: 'stun:://google.com' },
+                { urls: 'stun:://google.com' },
+                { urls: 'stun:://twilio.com' }
+            ]
         };
+
 
         startBtn.addEventListener('click', async () => {
             statusText.innerText = "Accessing microphone...";

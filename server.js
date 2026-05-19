@@ -28,6 +28,19 @@ io.on('connection', (socket) => {
         }
     });
 
+    // ভয়েস সিগন্যালিং পাস করার নতুন কোড
+    socket.on('offer', (data) => {
+        io.to(data.target).emit('offer', { offer: data.offer, sender: socket.id });
+    });
+
+    socket.on('answer', (data) => {
+        io.to(data.target).emit('answer', { answer: data.answer, sender: socket.id });
+    });
+
+    socket.on('ice_candidate', (data) => {
+        io.to(data.target).emit('ice_candidate', { candidate: data.candidate, sender: socket.id });
+    });
+
     socket.on('disconnect', () => {
         if (waitingUser && waitingUser.id === socket.id) {
             waitingUser = null;

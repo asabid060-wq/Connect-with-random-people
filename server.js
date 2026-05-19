@@ -10,10 +10,10 @@ const io = new Server(server);
 app.use(express.static(__dirname));
 
 // আপনার লাইভকিট ক্রেডেনশিয়ালস
-const LIVEKIT_URL = "wss://gtman-vjnbbcnr.livekit.cloud";
-const LIVEKIT_API_KEY = "APIR7Zd58gejbt2";
+const LIVEKIT_URL = wss://gtman-vjnbbcnr.livekit.cloud
+const LIVEKIT_API_KEY = APIR7Zd58gejbt2
 // নিচের লাইনে 'আপনার_secret_key_এখানে_বসাবেন' লেখাটি মুছে আপনার রিভিল করা secret key-টি পেস্ট করুন
-const LIVEKIT_SECRET_KEY = "আপনার_secret_key_এখানে_বসাবেন"; 
+const LIVEKIT_SECRET_KEY = Rra0vxqnfeb1xKGGcRMHhm6PrUilgqcLNF0TXMpG82W
 
 let waitingUser = null;
 
